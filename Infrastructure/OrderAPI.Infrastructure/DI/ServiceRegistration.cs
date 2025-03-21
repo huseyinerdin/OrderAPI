@@ -1,6 +1,6 @@
 ﻿namespace OrderAPI.Infrastructure.DI
 {
-    public class ServiceRegistration
+    public static class ServiceRegistration
     {
     }
 }

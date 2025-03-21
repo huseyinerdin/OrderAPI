@@ -1,6 +1,6 @@
 ﻿namespace OrderAPI.Persistence.Services
 {
-    public class ProductService
+    public class ProductManager
     {
     }
 }

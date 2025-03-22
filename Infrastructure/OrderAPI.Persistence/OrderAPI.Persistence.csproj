@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\OrderAPI.Application\OrderAPI.Application.csproj" />
+    <ProjectReference Include="..\OrderAPI.Infrastructure\OrderAPI.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

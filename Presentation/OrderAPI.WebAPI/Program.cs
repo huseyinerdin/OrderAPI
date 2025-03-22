@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrderAPI.Application;
+using OrderAPI.Infrastructure;
 using OrderAPI.Persistence;
 using OrderAPI.Persistence.Data;
 
@@ -7,7 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddPersistenceServices(builder.Configuration)
-                .AddApplicationServices();
+                .AddApplicationServices()
+                .AddInfrastructureServices();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

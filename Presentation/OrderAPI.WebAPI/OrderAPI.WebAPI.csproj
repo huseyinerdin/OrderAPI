@@ -16,10 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Infrastructure\OrderAPI.Infrastructure\OrderAPI.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Infrastructure\OrderAPI.Persistence\OrderAPI.Persistence.csproj" />
   </ItemGroup>

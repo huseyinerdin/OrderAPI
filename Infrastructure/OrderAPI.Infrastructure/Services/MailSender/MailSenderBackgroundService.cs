@@ -21,7 +21,7 @@ namespace OrderAPI.Infrastructure.Services.MailSender
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Task.Run(() =>
+            while (!stoppingToken.IsCancellationRequested)
             {
                 _rabbitMqService.Consume<SendMailMessage>("SendMail", async (message) =>
                 {
@@ -36,7 +36,8 @@ namespace OrderAPI.Infrastructure.Services.MailSender
                         _logger.LogError(ex, "Mail gönderimi sırasında hata oluştu.");
                     }
                 });
-            }, stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+            }
         }
     }
 }

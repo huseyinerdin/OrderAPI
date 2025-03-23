@@ -3,7 +3,6 @@ using OrderAPI.Application.Abstractions.IRepositories;
 using OrderAPI.Application.Abstractions.IServices;
 using OrderAPI.Application.DTOs;
 using OrderAPI.Domain.Entities;
-using OrderAPI.Infrastructure.Services.Messaging;
 
 namespace OrderAPI.Persistence.Services
 {

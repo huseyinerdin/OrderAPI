@@ -7,9 +7,11 @@ using RabbitMQ.Client.Events;
 
 namespace OrderAPI.Infrastructure.Services.Messaging
 {
-    public class RabbitMqService : IRabbitMqService
+    public class RabbitMqService : IRabbitMqService,IDisposable
     {
         private readonly ConnectionFactory _factory;
+        private IModel _channel;
+        private IConnection _connection;
 
         public RabbitMqService(IConfiguration configuration)
         {
@@ -24,10 +26,11 @@ namespace OrderAPI.Infrastructure.Services.Messaging
 
         public void PublishToQueue<T>(T message, string queueName)
         {
-            using var connection = _factory.CreateConnection();
-            using var channel = connection.CreateModel();
+            //TODO :asenkron yapılacak.
+            _connection = _factory.CreateConnection();
+            _channel = _connection.CreateModel();
 
-            channel.QueueDeclare(
+            _channel.QueueDeclare(
                 queue: queueName,
                 durable: true,
                 exclusive: false,
@@ -38,10 +41,10 @@ namespace OrderAPI.Infrastructure.Services.Messaging
             var jsonBody = JsonSerializer.Serialize(message);
             var body = Encoding.UTF8.GetBytes(jsonBody);
 
-            var properties = channel.CreateBasicProperties();
+            var properties = _channel.CreateBasicProperties();
             properties.Persistent = true;
 
-            channel.BasicPublish(
+            _channel.BasicPublish(
                 exchange: "",
                 routingKey: queueName,
                 basicProperties: properties,
@@ -50,16 +53,16 @@ namespace OrderAPI.Infrastructure.Services.Messaging
         }
         public void Consume<T>(string queueName, Func<T, Task> onMessage)
         {
-            using var connection = _factory.CreateConnection();
-            using var channel = connection.CreateModel();
-            channel.QueueDeclare(queue: queueName,
+            _connection = _factory.CreateConnection();
+            _channel = _connection.CreateModel();
+            _channel.QueueDeclare(queue: queueName,
                                  durable: true,
                                  exclusive: false,
                                  autoDelete: false,
                                  arguments: null
             );
 
-            var consumer = new EventingBasicConsumer(channel);
+            var consumer = new EventingBasicConsumer(_channel);
 
             consumer.Received += async (model, ea) =>
             {
@@ -72,7 +75,7 @@ namespace OrderAPI.Infrastructure.Services.Messaging
                     if (message != null)
                     {
                         await onMessage(message);
-                        channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                        _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
                     }
                 }
                 catch (Exception ex)
@@ -81,10 +84,20 @@ namespace OrderAPI.Infrastructure.Services.Messaging
                 }
             };
 
-            channel.BasicConsume(queue: queueName,
+            _channel.BasicConsume(queue: queueName,
                                  autoAck: false,
                                  consumer: consumer
             );
+        }
+        public void Stop()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            _channel.Dispose();
+            _connection.Dispose();
         }
     }
 }

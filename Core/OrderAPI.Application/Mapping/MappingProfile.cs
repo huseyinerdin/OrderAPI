@@ -10,7 +10,8 @@ namespace OrderAPI.Application.Mapping
         {
             CreateMap<Product, ProductDTO>().ReverseMap();
             CreateMap<OrderDetail, ProductDetail>().ReverseMap();
-            CreateMap<CreateOrderRequest, Order>().ReverseMap();
+            CreateMap<CreateOrderRequest, Order>().ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src =>
+                src.ProductDetails.Sum(pd => pd.UnitPrice * pd.Amount))).ReverseMap();
         }
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using System.Text;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace OrderAPI.Infrastructure.Services.Messaging
 {
@@ -45,6 +46,44 @@ namespace OrderAPI.Infrastructure.Services.Messaging
                 routingKey: queueName,
                 basicProperties: properties,
                 body: body
+            );
+        }
+        public void Consume<T>(string queueName, Func<T, Task> onMessage)
+        {
+            using var connection = _factory.CreateConnection();
+            using var channel = connection.CreateModel();
+            channel.QueueDeclare(queue: queueName,
+                                 durable: true,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null
+            );
+
+            var consumer = new EventingBasicConsumer(channel);
+
+            consumer.Received += async (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var messageJson = Encoding.UTF8.GetString(body);
+
+                try
+                {
+                    var message = JsonSerializer.Deserialize<T>(messageJson);
+                    if (message != null)
+                    {
+                        await onMessage(message);
+                        channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"RabbitMQ tüketim hatası: {ex.Message}");
+                }
+            };
+
+            channel.BasicConsume(queue: queueName,
+                                 autoAck: false,
+                                 consumer: consumer
             );
         }
     }

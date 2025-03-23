@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using OrderAPI.Application.Abstractions.IServices;
+using OrderAPI.Infrastructure.Services.MailSender;
 using OrderAPI.Infrastructure.Services.Messaging;
 
 namespace OrderAPI.Infrastructure
@@ -8,8 +9,10 @@ namespace OrderAPI.Infrastructure
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
         {
-            //TODO : Cache and logging service will add.
             services.AddSingleton<IRabbitMqService, RabbitMqService>();
+            services.AddScoped<IMailService, MailService>();
+            services.AddMemoryCache();
+            services.AddHostedService<MailSenderBackgroundService>();
             return services;
         }
     }

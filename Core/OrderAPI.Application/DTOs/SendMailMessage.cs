@@ -1,4 +1,4 @@
-﻿namespace OrderAPI.Infrastructure.Services.Messaging
+﻿namespace OrderAPI.Application.DTOs
 {
     public class SendMailMessage
     {

@@ -2,5 +2,6 @@
 {
     public interface ICacheService
     {
+        //TODO: Redis için servis yazılacak
     }
 }

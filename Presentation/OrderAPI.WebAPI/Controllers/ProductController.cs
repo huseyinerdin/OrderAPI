@@ -29,7 +29,7 @@ namespace OrderAPI.WebAPI.Controllers
                     Data = data
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest(new ApiResponse<List<ProductDTO>>
                 {

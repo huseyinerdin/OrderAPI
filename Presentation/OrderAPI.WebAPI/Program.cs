@@ -12,7 +12,7 @@ builder.Services.AddPersistenceServices(builder.Configuration)
                 .AddApplicationServices()
                 .AddInfrastructureServices();
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
+    .MinimumLevel.Information()
     .WriteTo.Console()
     .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();

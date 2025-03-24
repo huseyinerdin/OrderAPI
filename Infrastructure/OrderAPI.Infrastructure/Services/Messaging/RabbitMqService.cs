@@ -1,34 +1,36 @@
-﻿using OrderAPI.Application.Abstractions.IServices;
-using Microsoft.Extensions.Configuration;
-using System.Text.Json;
-using System.Text;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using OrderAPI.Application.Abstractions.IServices;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Text;
+using System.Text.Json;
 
 namespace OrderAPI.Infrastructure.Services.Messaging
 {
-    public class RabbitMqService : IRabbitMqService,IDisposable
+    public class RabbitMqService : IRabbitMqService
     {
         private readonly ConnectionFactory _factory;
-        private IModel _channel;
-        private IConnection _connection;
+        private readonly IConnection _connection;
+        private readonly IModel _channel;
+        private readonly ILogger<RabbitMqService> _logger;
 
-        public RabbitMqService(IConfiguration configuration)
+        public RabbitMqService(IConfiguration configuration, ILogger<RabbitMqService> logger)
         {
-            _factory = new ConnectionFactory
+            _logger = logger;
+            _factory = new()
             {
                 HostName = configuration["RabbitMq:HostName"],
                 Port = int.Parse(configuration["RabbitMq:Port"]),
                 UserName = configuration["RabbitMq:UserName"],
                 Password = configuration["RabbitMq:Password"]
             };
+            _connection = _factory.CreateConnection();
+            _channel = _connection.CreateModel();
         }
 
         public void PublishToQueue<T>(T message, string queueName)
         {
-            //TODO :asenkron yapılacak.
-            _connection = _factory.CreateConnection();
-            _channel = _connection.CreateModel();
 
             _channel.QueueDeclare(
                 queue: queueName,
@@ -53,16 +55,15 @@ namespace OrderAPI.Infrastructure.Services.Messaging
         }
         public void Consume<T>(string queueName, Func<T, Task> onMessage)
         {
-            _connection = _factory.CreateConnection();
-            _channel = _connection.CreateModel();
+
             _channel.QueueDeclare(queue: queueName,
-                                 durable: true,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null
+                                     durable: true,
+                                     exclusive: false,
+                                     autoDelete: false,
+                                     arguments: null
             );
 
-            var consumer = new EventingBasicConsumer(_channel);
+            var consumer = new AsyncEventingBasicConsumer(_channel);
 
             consumer.Received += async (model, ea) =>
             {
@@ -72,32 +73,24 @@ namespace OrderAPI.Infrastructure.Services.Messaging
                 try
                 {
                     var message = JsonSerializer.Deserialize<T>(messageJson);
-                    if (message != null)
+                    if (message is not null)
                     {
                         await onMessage(message);
+                        await Task.Delay(TimeSpan.FromSeconds(10));
                         _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"RabbitMQ tüketim hatası: {ex.Message}");
+                    _logger.LogError(ex, "RabbitMQ consumer error: {Message}", ex.Message);
                 }
             };
 
             _channel.BasicConsume(queue: queueName,
-                                 autoAck: false,
-                                 consumer: consumer
+                                     autoAck: false,
+                                     consumer: consumer
             );
-        }
-        public void Stop()
-        {
-            Dispose();
-        }
 
-        public void Dispose()
-        {
-            _channel.Dispose();
-            _connection.Dispose();
         }
     }
 }

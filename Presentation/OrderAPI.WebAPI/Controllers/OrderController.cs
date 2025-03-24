@@ -29,7 +29,7 @@ namespace OrderAPI.WebAPI.Controllers
                     Data = orderId
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest(new ApiResponse<int>
                 {

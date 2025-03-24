@@ -10,7 +10,7 @@ namespace OrderAPI.Infrastructure
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
         {
             services.AddSingleton<IRabbitMqService, RabbitMqService>();
-            services.AddScoped<IMailService, MailService>();
+            services.AddSingleton<IMailService, MailService>();
             services.AddMemoryCache();
             services.AddHostedService<MailSenderBackgroundService>();
             return services;

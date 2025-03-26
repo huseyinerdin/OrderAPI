@@ -52,6 +52,7 @@ namespace OrderAPI.Infrastructure.Services.Messaging
                 basicProperties: properties,
                 body: body
             );
+            _logger.LogInformation("Message published to RabbitMQ: {Message}", jsonBody);
         }
         public void Consume<T>(string queueName, Func<T, Task> onMessage)
         {
@@ -63,7 +64,7 @@ namespace OrderAPI.Infrastructure.Services.Messaging
                                      arguments: null
             );
 
-            var consumer = new AsyncEventingBasicConsumer(_channel);
+            var consumer = new EventingBasicConsumer(_channel);
 
             consumer.Received += async (model, ea) =>
             {
@@ -76,7 +77,6 @@ namespace OrderAPI.Infrastructure.Services.Messaging
                     if (message is not null)
                     {
                         await onMessage(message);
-                        await Task.Delay(TimeSpan.FromSeconds(10));
                         _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
                     }
                 }

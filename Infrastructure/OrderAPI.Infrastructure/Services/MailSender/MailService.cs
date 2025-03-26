@@ -15,8 +15,7 @@ namespace OrderAPI.Infrastructure.Services.MailSender
 
         public Task SendMailAsync(SendMailMessage message)
         {
-            //TODO : Mail gönderme işlemi yapılacak
-            _logger.LogWarning($"📧 Mail Gönderildi -> {message.To} | Konu: {message.Subject} | İçerik: {message.Body}");
+            _logger.LogInformation("📧 Mail Gönderildi -> {To} | Konu: {Subject} | İçerik: {Body}", message.To, message.Subject, message.Body);
             return Task.CompletedTask;
         }
     }

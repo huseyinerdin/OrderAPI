@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using OrderAPI.Application.Abstractions.IServices;
 using StackExchange.Redis;
 using System.Text.Json;
@@ -8,9 +9,11 @@ namespace OrderAPI.Infrastructure.Services.Cache
     public class RedisCacheService : ICacheService
     {
         private readonly IDatabase _cache;
+        private readonly ILogger<RedisCacheService> _logger;
 
-        public RedisCacheService(IConfiguration configuration)
+        public RedisCacheService(IConfiguration configuration, ILogger<RedisCacheService> logger)
         {
+            _logger = logger;
             var redis = ConnectionMultiplexer.Connect(configuration["Redis:ConnectionString"]);
             _cache = redis.GetDatabase();
         }
@@ -27,11 +30,13 @@ namespace OrderAPI.Infrastructure.Services.Cache
         {
             var json = JsonSerializer.Serialize(value);
             await _cache.StringSetAsync(key, json, expiry);
+            _logger.LogInformation("Cache set for key: {Key}", key);
         }
 
         public async Task RemoveAsync(string key)
         {
             await _cache.KeyDeleteAsync(key);
+            _logger.LogInformation("Cache remove for key: {Key}", key);
         }
 
         public bool KeyExists(string key)

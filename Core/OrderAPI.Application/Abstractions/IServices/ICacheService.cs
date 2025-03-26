@@ -2,6 +2,9 @@
 {
     public interface ICacheService
     {
-        //TODO: Redis için servis yazılacak
+        Task SetAsync<T>(string key, T value, TimeSpan? expiry = null);
+        Task<T?> GetAsync<T>(string key);
+        Task RemoveAsync(string key);
+        bool KeyExists(string key);
     }
 }
